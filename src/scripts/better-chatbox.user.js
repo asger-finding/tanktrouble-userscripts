@@ -1,16 +1,16 @@
 // ==UserScript==
 // @name        Better TankTrouble Chatbox
 // @author      commander
+// @description Redesigned chatbox meant both for power users, and those who maybe just wants something new
 // @namespace   https://github.com/asger-finding
 // @version     0.1.2
 // @license     GPL-3.0
-// @description Redesigned chatbox meant both for power users, and those who maybe just wants something new
 // @match       *://*.tanktrouble.com/*
+// @run-at      document-end
 // @grant       GM_addStyle
 // @grant       GM_getValue
 // @grant       GM_setValue
-// @require     https://update.greasyfork.org/scripts/482092/1301905/TankTrouble%20Development%20Library.js
-// @run-at      document-end
+// @require     https://update.greasyfork.org/scripts/482092/1301938/TankTrouble%20Development%20Library.js
 // @noframes
 // ==/UserScript==
 
@@ -113,27 +113,6 @@ body:has(#chat .body.ui-resizable-resizing) .ui-resizable-handle.handle.ui-resiz
 `);
 
 /**
- * Pass a function to a hook with the correct context
- * @param context Function context (e.g `window`)
- * @param funcName Function identifier in the context
- * @param hook Hook to call before the original
- */
-const hookFunction = (context, funcName, hook) => {
-	const original = Reflect.get(context, funcName);
-	if (typeof original !== 'function') throw new Error('Item passed is not typeof function');
-
-	Reflect.defineProperty(context, funcName, {
-		/**
-		 * Call the hook with the original function bound to its context
-		 * and supply with the arguments list
-		 * @param args Arguments passed from outside
-		 * @returns Original function return value
-		 */
-		value: (...args) => hook(original.bind(context), ...args)
-	});
-};
-
-/**
  * Reconfigure the chat handle to be dragging
  * from the south-east direction (down)
  * to the north-east direction (up)
@@ -169,13 +148,13 @@ const changeHandleDirection = () => {
  * This fixes chat messages not showing up in the reversed chat order
  */
 const fixChatRendering = () => {
-	hookFunction(TankTrouble.ChatBox, '_renderChatMessage', (original, ...args) => {
+	Loader.hookFunction(TankTrouble.ChatBox, '_renderChatMessage', (original, ...args) => {
 		// Set animateHeight to false
 		args[9] = false;
 		original(...args);
 	});
 
-	hookFunction(TankTrouble.ChatBox, '_renderSystemMessage', (original, ...args) => {
+	Loader.hookFunction(TankTrouble.ChatBox, '_renderSystemMessage', (original, ...args) => {
 		// Set animateHeight to false
 		args[3] = false;
 		original(...args);
@@ -187,7 +166,7 @@ const fixChatRendering = () => {
  * Print message to chat when client switches server to separate conversations
  */
 const preventChatClear = () => {
-	hookFunction(TankTrouble.ChatBox, '_clearChat', (original, ...args) => {
+	Loader.hookFunction(TankTrouble.ChatBox, '_clearChat', (original, ...args) => {
 		const isUnconnected = ClientManager.getClient().getState() === TTClient.STATES.UNCONNECTED;
 
 		// Void the call if the client is unconnected
@@ -197,7 +176,7 @@ const preventChatClear = () => {
 		return original(...args);
 	});
 
-	hookFunction(TankTrouble.ChatBox, '_updateStatusMessageAndAvailability', (original, ...args) => {
+	Loader.hookFunction(TankTrouble.ChatBox, '_updateStatusMessageAndAvailability', (original, ...args) => {
 		const [systemMessageText, guestPlayerIds] = args;
 
 		// Check for welcome message
@@ -215,11 +194,11 @@ const preventChatClear = () => {
  * @returns Promise for last savestate
  */
 const startChatSavestate = () => {
-	hookFunction(TankTrouble.ChatBox, 'open', (original, ...args) => {
+	Loader.hookFunction(TankTrouble.ChatBox, 'open', (original, ...args) => {
 		GM_setValue('chat-open', true);
 		original(...args);
 	});
-	hookFunction(TankTrouble.ChatBox, 'close', (original, ...args) => {
+	Loader.hookFunction(TankTrouble.ChatBox, 'close', (original, ...args) => {
 		GM_setValue('chat-open', false);
 		original(...args);
 	});
@@ -230,7 +209,7 @@ const startChatSavestate = () => {
 
 changeHandleDirection();
 fixChatRendering();
-whenContentInitialized().then(async() => {
+Loader.whenContentInitialized().then(async() => {
 	preventChatClear();
 
 	const shouldChatOpen = await startChatSavestate();
