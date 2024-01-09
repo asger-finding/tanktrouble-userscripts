@@ -6,6 +6,7 @@
 // @version     0.0.3
 // @license     GPL-3.0
 // @match       *://*.tanktrouble.com/*
+// @exclude     *://classic.tanktrouble.com/
 // @run-at      document-end
 // @grant       GM_addStyle
 // @require     https://update.greasyfork.org/scripts/482092/1301938/TankTrouble%20Development%20Library.js

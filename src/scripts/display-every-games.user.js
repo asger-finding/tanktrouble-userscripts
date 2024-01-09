@@ -5,6 +5,7 @@
 // @license     GPL-3.0
 // @namespace   https://github.com/asger-finding
 // @match       https://*.tanktrouble.com/*
+// @exclude     *://classic.tanktrouble.com/
 // @description Show all 6 potential games while in the lobby
 // @run-at      document-end
 // @grant       none
@@ -24,7 +25,7 @@ UIGameIconImage.prototype.spawn = function(x, y, gameState, favouriteActiveQueue
 	this.playerStates = gameState.getPlayerStates();
 	this.favouriteActiveQueuedCounts = favouriteActiveQueuedCounts;
 	this._updateUI();
-	const delay = 50 + Math.random() * 200;
+	const delay = 50 + (Math.random() * 200);
 	if (this.removeTween) this.removeTween.stop();
 
 	this.game.add.tween(this.scale).to({

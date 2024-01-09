@@ -6,6 +6,7 @@
 // @version     0.1.2
 // @license     GPL-3.0
 // @match       *://*.tanktrouble.com/*
+// @exclude     *://classic.tanktrouble.com/
 // @run-at      document-end
 // @grant       GM_addStyle
 // @grant       GM_getValue
