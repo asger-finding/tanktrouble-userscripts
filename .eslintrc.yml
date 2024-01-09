@@ -21,13 +21,16 @@ rules:
 
   no-trailing-spaces: [error, { ignoreComments: true }]
   multiline-comment-style: [error, separate-lines]
-  id-length: [warn, { exceptions: [i, j, k, $] }]
+  id-length: [warn, { exceptions: [i, j, k, $, x, y, z] }]
   new-cap: ["error", { "capIsNewExceptionPattern": "^GM_" }]
   linebreak-style: 0
   sort-keys: 0
   no-labels: 0
   no-undef: 0
   no-magic-numbers: 0
+
+  # Conflicts with no-mixed-operators rule
+  no-extra-parens: 0
 
   # Empty functions may be used for Backend result callbacks
   no-empty-function: 0
