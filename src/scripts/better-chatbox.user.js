@@ -11,7 +11,7 @@
 // @grant       GM_addStyle
 // @grant       GM_getValue
 // @grant       GM_setValue
-// @require     https://update.greasyfork.org/scripts/482092/1301938/TankTrouble%20Development%20Library.js
+// @require     https://update.greasyfork.org/scripts/482092/1309109/TankTrouble%20Development%20Library.js
 // @noframes
 // ==/UserScript==
 
@@ -149,13 +149,13 @@ const changeHandleDirection = () => {
  * This fixes chat messages not showing up in the reversed chat order
  */
 const fixChatRendering = () => {
-	Loader.hookFunction(TankTrouble.ChatBox, '_renderChatMessage', (original, ...args) => {
+	Loader.interceptFunction(TankTrouble.ChatBox, '_renderChatMessage', (original, ...args) => {
 		// Set animateHeight to false
 		args[9] = false;
 		original(...args);
 	});
 
-	Loader.hookFunction(TankTrouble.ChatBox, '_renderSystemMessage', (original, ...args) => {
+	Loader.interceptFunction(TankTrouble.ChatBox, '_renderSystemMessage', (original, ...args) => {
 		// Set animateHeight to false
 		args[3] = false;
 		original(...args);
@@ -167,7 +167,7 @@ const fixChatRendering = () => {
  * Print message to chat when client switches server to separate conversations
  */
 const preventChatClear = () => {
-	Loader.hookFunction(TankTrouble.ChatBox, '_clearChat', (original, ...args) => {
+	Loader.interceptFunction(TankTrouble.ChatBox, '_clearChat', (original, ...args) => {
 		const isUnconnected = ClientManager.getClient().getState() === TTClient.STATES.UNCONNECTED;
 
 		// Void the call if the client is unconnected
@@ -177,7 +177,7 @@ const preventChatClear = () => {
 		return original(...args);
 	});
 
-	Loader.hookFunction(TankTrouble.ChatBox, '_updateStatusMessageAndAvailability', (original, ...args) => {
+	Loader.interceptFunction(TankTrouble.ChatBox, '_updateStatusMessageAndAvailability', (original, ...args) => {
 		const [systemMessageText, guestPlayerIds] = args;
 
 		// Check for welcome message
@@ -195,11 +195,11 @@ const preventChatClear = () => {
  * @returns Promise for last savestate
  */
 const startChatSavestate = () => {
-	Loader.hookFunction(TankTrouble.ChatBox, 'open', (original, ...args) => {
+	Loader.interceptFunction(TankTrouble.ChatBox, 'open', (original, ...args) => {
 		GM_setValue('chat-open', true);
 		original(...args);
 	});
-	Loader.hookFunction(TankTrouble.ChatBox, 'close', (original, ...args) => {
+	Loader.interceptFunction(TankTrouble.ChatBox, 'close', (original, ...args) => {
 		GM_setValue('chat-open', false);
 		original(...args);
 	});

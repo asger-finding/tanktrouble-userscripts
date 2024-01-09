@@ -9,7 +9,7 @@
 // @exclude     *://classic.tanktrouble.com/
 // @run-at      document-end
 // @grant       GM_addStyle
-// @require     https://update.greasyfork.org/scripts/482092/1301938/TankTrouble%20Development%20Library.js
+// @require     https://update.greasyfork.org/scripts/482092/1309109/TankTrouble%20Development%20Library.js
 // @noframes
 // ==/UserScript==
 
@@ -20,29 +20,27 @@ GM_addStyle(`
 }
 `);
 
-Loader.whenContentInitialized().then(() => {
-	Loader.hookFunction(TankTrouble.VirtualShopOverlay, '_initialize', (original, ...args) => {
-		original(...args);
+Loader.interceptFunction(TankTrouble.VirtualShopOverlay, '_initialize', (original, ...args) => {
+	original(...args);
 
-		TankTrouble.VirtualShopOverlay.walletGold = $("<div><button class='medium disabled' style='display: flex;'>Loading ...</button></div>");
-		TankTrouble.VirtualShopOverlay.walletDiamonds = $("<div><button class='medium disabled' style='display: flex;'>Loading ...</button></div>");
-		TankTrouble.VirtualShopOverlay.navigation.append([TankTrouble.VirtualShopOverlay.walletGold, TankTrouble.VirtualShopOverlay.walletDiamonds]);
-	});
+	TankTrouble.VirtualShopOverlay.walletGold = $("<div><button class='medium disabled' style='display: flex;'>Loading ...</button></div>");
+	TankTrouble.VirtualShopOverlay.walletDiamonds = $("<div><button class='medium disabled' style='display: flex;'>Loading ...</button></div>");
+	TankTrouble.VirtualShopOverlay.navigation.append([TankTrouble.VirtualShopOverlay.walletGold, TankTrouble.VirtualShopOverlay.walletDiamonds]);
+});
 
-	Loader.hookFunction(TankTrouble.VirtualShopOverlay, 'show', (original, ...args) => {
-		original(...args);
+Loader.interceptFunction(TankTrouble.VirtualShopOverlay, 'show', (original, ...args) => {
+	original(...args);
 
-		const [params] = args;
-		Backend.getInstance().getCurrency(result => {
-			if (typeof result === 'object') {
-				const goldButton = TankTrouble.VirtualShopOverlay.walletGold.find('button').empty();
-				const diamondsButton = TankTrouble.VirtualShopOverlay.walletDiamonds.find('button').empty();
+	const [params] = args;
+	Backend.getInstance().getCurrency(result => {
+		if (typeof result === 'object') {
+			const goldButton = TankTrouble.VirtualShopOverlay.walletGold.find('button').empty();
+			const diamondsButton = TankTrouble.VirtualShopOverlay.walletDiamonds.find('button').empty();
 
-				Utils.addImageWithClasses(goldButton, 'walletIcon', 'assets/images/virtualShop/gold.png');
-				goldButton.append(result.getGold());
-				Utils.addImageWithClasses(diamondsButton, 'walletIcon', 'assets/images/virtualShop/diamond.png');
-				diamondsButton.append(result.getDiamonds());
-			}
-		}, () => {}, () => {}, params.playerId, Caches.getCurrencyCache());
-	});
+			Utils.addImageWithClasses(goldButton, 'walletIcon', 'assets/images/virtualShop/gold.png');
+			goldButton.append(result.getGold());
+			Utils.addImageWithClasses(diamondsButton, 'walletIcon', 'assets/images/virtualShop/diamond.png');
+			diamondsButton.append(result.getDiamonds());
+		}
+	}, () => {}, () => {}, params.playerId, Caches.getCurrencyCache());
 });
