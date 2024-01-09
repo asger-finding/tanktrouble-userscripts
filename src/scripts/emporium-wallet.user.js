@@ -2,7 +2,7 @@
 // @name        Emporium Wallet
 // @author      commander
 // @description Show your currency in Dimitri's Emporium
-// @namespace   https://github.com/asger-finding
+// @namespace   https://github.com/asger-finding/tanktrouble-userscripts
 // @version     0.0.3
 // @license     GPL-3.0
 // @match       *://*.tanktrouble.com/*

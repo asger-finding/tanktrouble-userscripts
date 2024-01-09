@@ -2,7 +2,7 @@
 // @name        Keystroke overlay
 // @author      commander
 // @description Keys overlay for game inputs in TankTrouble
-// @namespace   https://github.com/asger-finding
+// @namespace   https://github.com/asger-finding/tanktrouble-userscripts
 // @version     0.0.3
 // @license     GPL-3.0
 // @match       *://*.tanktrouble.com/*

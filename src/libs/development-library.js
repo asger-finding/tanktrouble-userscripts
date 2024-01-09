@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        TankTrouble Development Library
 // @author      commander
-// @namespace   https://github.com/asger-finding
+// @namespace   https://github.com/asger-finding/tanktrouble-userscripts
 // @version     0.0.6
 // @license     GPL-3.0
 // @description Shared library for TankTrouble userscript development

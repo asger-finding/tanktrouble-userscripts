@@ -2,7 +2,7 @@
 // @name        Classic Mouse
 // @author      commander
 // @description Restores the mouse from TankTrouble Classic back into TankTrouble Online
-// @namespace   https://github.com/asger-finding
+// @namespace   https://github.com/asger-finding/tanktrouble-userscripts
 // @version     0.0.1
 // @license     GPL-3.0
 // @match       *://*.tanktrouble.com/*

@@ -2,7 +2,7 @@
 // @name        Fake Premium
 // @author      commander
 // @description Makes the game think you have premium (only visual)
-// @namespace   https://github.com/asger-finding
+// @namespace   https://github.com/asger-finding/tanktrouble-userscripts
 // @version     0.0.1
 // @license     GPL-3.0
 // @match       *://*.tanktrouble.com/*

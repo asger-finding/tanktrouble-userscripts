@@ -2,7 +2,7 @@
 // @name        Better TankTrouble Chatbox
 // @author      commander
 // @description Redesigned chatbox meant both for power users, and those who maybe just wants something new
-// @namespace   https://github.com/asger-finding
+// @namespace   https://github.com/asger-finding/tanktrouble-userscripts
 // @version     0.1.2
 // @license     GPL-3.0
 // @match       *://*.tanktrouble.com/*
