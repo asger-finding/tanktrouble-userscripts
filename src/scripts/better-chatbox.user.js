@@ -15,6 +15,9 @@
 // @noframes
 // ==/UserScript==
 
+// TODO: chat messages history - press up to go to last sent message
+// TODO: whisper suggestions when pressing @ ?
+
 GM_addStyle(`
 #chat {
   /*Move it to the bottom left*/
