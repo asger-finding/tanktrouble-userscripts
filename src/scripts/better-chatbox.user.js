@@ -153,12 +153,16 @@ const changeHandleDirection = () => {
  */
 const fixChatRendering = () => {
 	Loader.interceptFunction(TankTrouble.ChatBox, '_renderChatMessage', (original, ...args) => {
+		TankTrouble.ChatBox.chatBody.scrollTop(TankTrouble.ChatBox.chatBody.height());
+
 		// Set animateHeight to false
 		args[9] = false;
 		original(...args);
 	});
 
 	Loader.interceptFunction(TankTrouble.ChatBox, '_renderSystemMessage', (original, ...args) => {
+		TankTrouble.ChatBox.chatBody.scrollTop(TankTrouble.ChatBox.chatBody.height());
+
 		// Set animateHeight to false
 		args[3] = false;
 		original(...args);
