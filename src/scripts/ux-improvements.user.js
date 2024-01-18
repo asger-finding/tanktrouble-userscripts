@@ -47,6 +47,27 @@ const timeAgo = date => {
 };
 
 (() => {
+	// Fix no log bound to UIGoldSprite and UIDiamondSprite - causes crashes sometimes
+	return;
+
+	Loader.interceptFunction(unsafeWindow, 'UIDiamondSprite', (original, ...args) => {
+		const result = original(...args);
+
+		console.log(result);
+
+		return result;
+	});
+
+	Loader.interceptFunction(unsafeWindow, 'UIGoldSprite', (original, ...args) => {
+		const result = original(...args);
+
+		console.log(result);
+
+		return result;
+	});
+})();
+
+(() => {
 	GM_addStyle(`
 	.forum .tanks {
 		position: absolute;
@@ -223,12 +244,15 @@ const timeAgo = date => {
 		if (latestEdit) {
 			const details = threadOrReplyElement.find('.bubble .details');
 			const detailsText = details.text();
-			const [, lastReply] = detailsText.split(detailsText.indexOf('-') - 2);
+			const replyIndex = detailsText.indexOf('-');
+			const lastReply = replyIndex !== -1
+				? ` - ${ detailsText.slice(replyIndex + 1).trim()}`
+				: '';
 
 			const createdAgo = timeAgo(new Date(created * 1000));
 			const editedAgo = `, edited ${ timeAgo(new Date(latestEdit * 1000)) }`;
 
-			details.text(`Created ${createdAgo}${editedAgo}${lastReply ? lastReply : ''}`);
+			details.text(`Created ${createdAgo}${editedAgo}${lastReply}`);
 		}
 	};
 
