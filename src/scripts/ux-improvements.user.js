@@ -47,24 +47,26 @@ const timeAgo = date => {
 };
 
 (() => {
-	// Fix no log bound to UIGoldSprite and UIDiamondSprite - causes crashes sometimes
-	return;
+	/**
+	 * Patch a sprite that doesn't have a .log bound to it
+	 * @param spriteName Name of the sprite in the DOM
+	 * @returns Function wrapper
+	 */
+	const bindLogToSprite = spriteName => {
+		const Sprite = Reflect.get(unsafeWindow, spriteName);
+		if (!Sprite) throw new Error('No sprite in window with name', spriteName);
 
-	Loader.interceptFunction(unsafeWindow, 'UIDiamondSprite', (original, ...args) => {
-		const result = original(...args);
+		return function(...args) {
+			const sprite = new Sprite(...args);
 
-		console.log(result);
+			sprite.log = Log.create(spriteName);
 
-		return result;
-	});
+			return sprite;
+		};
+	};
 
-	Loader.interceptFunction(unsafeWindow, 'UIGoldSprite', (original, ...args) => {
-		const result = original(...args);
-
-		console.log(result);
-
-		return result;
-	});
+	Reflect.set(unsafeWindow, 'UIDiamondSprite', bindLogToSprite('UIDiamondSprite'));
+	Reflect.set(unsafeWindow, 'UIGoldSprite', bindLogToSprite('UIGoldSprite'));
 })();
 
 (() => {
@@ -249,6 +251,11 @@ const timeAgo = date => {
 				? ` - ${ detailsText.slice(replyIndex + 1).trim()}`
 				: '';
 
+			// We remake creation time since the timeAgo
+			// function estimates months slightly off
+			// which may result in instances where the
+			// edited happened longer ago than the thread
+			// creation date
 			const createdAgo = timeAgo(new Date(created * 1000));
 			const editedAgo = `, edited ${ timeAgo(new Date(latestEdit * 1000)) }`;
 
