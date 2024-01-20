@@ -13,9 +13,13 @@
 // @noframes
 // ==/UserScript==
 
+
+// TODO: Hyperlinks in the forum
+// TODO: Search in the forum (searxng api?)
 // TODO: Button to render high-res tanks no outline in TankInfoBox
 // TODO: Minimum game quality setting
 // TODO: Lobby games carousel
+// TODO: control switcher
 
 const ranges = {
 	years: 3600 * 24 * 365,
@@ -39,7 +43,7 @@ const timeAgo = date => {
 	for (const key in ranges) {
 		if (ranges[key] < Math.abs(secondsElapsed)) {
 			const delta = secondsElapsed / ranges[key];
-			return formatter.format(Math.round(delta), key);
+			return formatter.format(Math.ceil(delta), key);
 		}
 	}
 
