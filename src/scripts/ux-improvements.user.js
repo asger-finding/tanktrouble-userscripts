@@ -13,8 +13,6 @@
 // @noframes
 // ==/UserScript==
 
-
-// TODO: Hyperlinks in the forum
 // TODO: Search in the forum (searxng api?)
 // TODO: Button to render high-res tanks no outline in TankInfoBox
 // TODO: Minimum game quality setting
@@ -268,6 +266,21 @@ const timeAgo = date => {
 	};
 
 	/**
+	 * Add anchor tags to links in posts
+	 * @param _threadOrReply Post data
+	 * @param threadOrReplyElement Parsed post element
+	 */
+	const addHyperlinks = (_threadOrReply, threadOrReplyElement) => {
+		const threadOrReplyContent = threadOrReplyElement.find('.bubble .content');
+
+		if (threadOrReplyContent.length) {
+			const urlRegex = /(?<_>https?:\/\/[\w\-_]+(?:\.[\w\-_]+)+(?:[\w\-.,@?^=%&amp;:/~+#]*[\w\-@?^=%&amp;/~+#])?)/gu;
+			const messageWithLinks = threadOrReplyContent.html().replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
+			threadOrReplyContent.html(messageWithLinks);
+		}
+	};
+
+	/**
 	 * Add extra features to a thread or reply
 	 * @param threadOrReply Post data
 	 */
@@ -282,6 +295,7 @@ const timeAgo = date => {
 			insertMultipleCreators(threadOrReply, threadOrReplyElement);
 			addLastEdited(threadOrReply, threadOrReplyElement);
 			addShareButton(threadOrReply, threadOrReplyElement);
+			addHyperlinks(threadOrReply, threadOrReplyElement);
 
 			threadOrReply.html[key] = threadOrReplyElement;
 		}
