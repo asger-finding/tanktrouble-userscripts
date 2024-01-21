@@ -328,20 +328,38 @@ const timeAgo = date => {
 	/**
 	 * Add extra features to a thread or reply
 	 * @param threadOrReply Post data
+	 * @param threadOrReplyElement
 	 */
-	const addFeaturesToThreadOrReply = threadOrReply => {
-		// FIXME: Threads and replies sometimes bug out. Investigate!
+	const addFeaturesToThreadOrReply = (threadOrReply, threadOrReplyElement) => {
+		insertMultipleCreators(threadOrReply, threadOrReplyElement);
+		addLastEdited(threadOrReply, threadOrReplyElement);
+		addShare(threadOrReply, threadOrReplyElement);
+		addHyperlinks(threadOrReply, threadOrReplyElement);
+	};
+
+	/**
+	 *
+	 * @param threadOrReply
+	 */
+	const handleThreadOrReply = threadOrReply => {
+		if (threadOrReply === null) return;
+
 		const [key] = Object.keys(threadOrReply.html);
 		const html = threadOrReply.html[key];
 
 		if (typeof html === 'string') {
 			const threadOrReplyElement = $($.parseHTML(html));
 
-			insertMultipleCreators(threadOrReply, threadOrReplyElement);
-			addLastEdited(threadOrReply, threadOrReplyElement);
-			addShare(threadOrReply, threadOrReplyElement);
-			addHyperlinks(threadOrReply, threadOrReplyElement);
+			addFeaturesToThreadOrReply(threadOrReply, threadOrReplyElement);
+			threadOrReply.html[key] = threadOrReplyElement;
+			threadOrReply.html.backup = html;
+		} else if (html instanceof $) {
+			// For some reason, the post breaks if it's already
+			// been parsed through here. Therefore, we pull
+			// from the backup html we set, and re-apply the changes
+			const threadOrReplyElement = $($.parseHTML(threadOrReply.html.backup));
 
+			addFeaturesToThreadOrReply(threadOrReply, threadOrReplyElement);
 			threadOrReply.html[key] = threadOrReplyElement;
 		}
 	};
@@ -349,7 +367,7 @@ const timeAgo = date => {
 	const threadListChanged = ForumView.getMethod('threadListChanged');
 	ForumView.method('threadListChanged', function(...args) {
 		const threadList = args.shift();
-		for (const thread of threadList) addFeaturesToThreadOrReply(thread);
+		for (const thread of threadList) handleThreadOrReply(thread);
 
 		const result = threadListChanged.apply(this, [threadList, ...args]);
 		return result;
@@ -357,10 +375,10 @@ const timeAgo = date => {
 
 	const replyListChanged = ForumView.getMethod('replyListChanged');
 	ForumView.method('replyListChanged', function(...args) {
-		const threadList = args.shift();
-		for (const thread of threadList) addFeaturesToThreadOrReply(thread);
+		const replyList = args.shift();
+		for (const thread of replyList) handleThreadOrReply(thread);
 
-		const result = replyListChanged.apply(this, [threadList, ...args]);
+		const result = replyListChanged.apply(this, [replyList, ...args]);
 		return result;
 	});
 
@@ -368,7 +386,7 @@ const timeAgo = date => {
 	ForumModel.method('getSelectedThread', function(...args) {
 		const result = getSelectedThread.apply(this, [...args]);
 
-		addFeaturesToThreadOrReply(result);
+		handleThreadOrReply(result);
 
 		return result;
 	});
