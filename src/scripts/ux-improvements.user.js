@@ -73,6 +73,16 @@ const timeAgo = date => {
 
 (() => {
 	GM_addStyle(`
+	@keyframes highlight-thread {
+		50% {
+			border: #a0e900 2px solid;
+			background-color: #dcffcc;
+		}
+	}
+	.forum .thread.highlight .bubble,
+	.forum .reply.highlight .bubble {
+		animation: .5s ease-in 0.3s 2 alternate highlight-thread;
+	}
 	.forum .tanks {
 		position: absolute;
 	}
@@ -108,9 +118,7 @@ const timeAgo = date => {
 		display: none;
 	}
 	.forum .thread .share:not(:active) .standard,
-	.forum .thread .share:active .active {
-		display: inherit;
-	}
+	.forum .thread .share:active .active,
 	.forum .reply .share:not(:active) .standard,
 	.forum .reply .share:active .active {
 		display: inherit;
@@ -194,11 +202,42 @@ const timeAgo = date => {
 	};
 
 	/**
+	 * Scroll a post into view if it's not already
+	 * and highlight it once in view
+	 * @param threadOrReply Parsed post element
+	 */
+	const highlightThreadOrReply = threadOrReply => {
+		const observer = new IntersectionObserver(entries => {
+			const [entry] = entries;
+			const inView = entry.isIntersecting;
+
+			if (!inView) {
+				threadOrReply[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+			} else {
+				threadOrReply.addClass('highlight');
+
+				observer.disconnect();
+			}
+		});
+
+		observer.observe(threadOrReply[0]);
+	};
+
+	/**
 	 * Insert a share button to the thread or reply that copies the link to the post to clipboard
 	 * @param threadOrReply Post data
 	 * @param threadOrReplyElement Parsed post element
 	 */
-	const addShareButton = (threadOrReply, threadOrReplyElement) => {
+	const addShare = (threadOrReply, threadOrReplyElement) => {
+		const isReply = Boolean(threadOrReply.threadId);
+
+		const url = new URL(window.location.href);
+		const wasWindowOpenedFromPostShare = url.searchParams.get('ref') === 'share';
+		if (wasWindowOpenedFromPostShare && isReply) {
+			const urlReplyId = Number(url.searchParams.get('id'));
+			if (urlReplyId === threadOrReply.id) highlightThreadOrReply(threadOrReplyElement);
+		}
+
 		const likeAction = threadOrReplyElement.find('.action.like');
 
 		let shareAction = $('<div class="action share"></div>');
@@ -226,16 +265,18 @@ const timeAgo = date => {
 		shareAction.tooltipster('content', 'Copy link to clipboard');
 
 		shareAction.on('mouseup', () => {
-			const url = new URL('/forum', window.location.origin);
+			const urlConstruct = new URL('/forum', window.location.origin);
 
-			if (threadOrReply.threadId) {
-				url.searchParams.set('id', threadOrReply.id);
-				url.searchParams.set('threadId', threadOrReply.threadId);
+			if (isReply) {
+				urlConstruct.searchParams.set('id', threadOrReply.id);
+				urlConstruct.searchParams.set('threadId', threadOrReply.threadId);
 			} else {
-				url.searchParams.set('threadId', threadOrReply.id);
+				urlConstruct.searchParams.set('threadId', threadOrReply.id);
 			}
 
-			ClipboardManager.copy(url.href);
+			urlConstruct.searchParams.set('ref', 'share');
+
+			ClipboardManager.copy(urlConstruct.href);
 
 			shareAction.tooltipster('content', 'Copied!');
 		});
@@ -298,7 +339,7 @@ const timeAgo = date => {
 
 			insertMultipleCreators(threadOrReply, threadOrReplyElement);
 			addLastEdited(threadOrReply, threadOrReplyElement);
-			addShareButton(threadOrReply, threadOrReplyElement);
+			addShare(threadOrReply, threadOrReplyElement);
 			addHyperlinks(threadOrReply, threadOrReplyElement);
 
 			threadOrReply.html[key] = threadOrReplyElement;
