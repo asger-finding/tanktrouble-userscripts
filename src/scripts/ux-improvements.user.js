@@ -220,16 +220,20 @@ const timeAgo = date => {
 
 			/** Reset tooltipster when mouse leaves */
 			functionAfter: () => {
-				shareAction.tooltipster('content', 'Copy post to clipboard');
+				shareAction.tooltipster('content', 'Copy link to clipboard');
 			}
 		});
-		shareAction.tooltipster('content', 'Copy post to clipboard');
+		shareAction.tooltipster('content', 'Copy link to clipboard');
 
 		shareAction.on('mouseup', () => {
 			const url = new URL('/forum', window.location.origin);
 
-			url.searchParams.set('id', threadOrReply.id);
-			if (threadOrReply.threadId) url.searchParams.set('threadId', threadOrReply.threadId);
+			if (threadOrReply.threadId) {
+				url.searchParams.set('id', threadOrReply.id);
+				url.searchParams.set('threadId', threadOrReply.threadId);
+			} else {
+				url.searchParams.set('threadId', threadOrReply.id);
+			}
 
 			ClipboardManager.copy(url.href);
 
