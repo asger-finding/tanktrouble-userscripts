@@ -211,9 +211,8 @@ const timeAgo = date => {
 			const [entry] = entries;
 			const inView = entry.isIntersecting;
 
-			if (!inView) {
-				threadOrReply[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-			} else {
+			threadOrReply[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+			if (inView) {
 				threadOrReply.addClass('highlight');
 
 				observer.disconnect();
