@@ -48,6 +48,80 @@ const timeAgo = date => {
 	return 'now';
 };
 
+GM_addStyle(`
+player-name {
+	width: 150px;
+	height: 20px;
+	left: -5px;
+	top: -12px;
+	position: relative;
+	display: block;
+}`);
+
+if (!customElements.get('player-name')) {
+	customElements.define('player-name',
+
+		/**
+		 * Custom HTML element that renders a TankTrouble-style player name
+		 * from the username, width and height attribute
+		 */
+		class PlayerName extends HTMLElement {
+
+			/**
+			 * Initialize the player name element
+			 */
+			constructor() {
+				super();
+
+				const shadow = this.attachShadow({ mode: 'closed' });
+
+				this.username = this.getAttribute('username') || 'Scrapped';
+				this.width = this.getAttribute('width') || '150';
+				this.height = this.getAttribute('height') || '25';
+
+				// create the internal implementation
+				this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+				this.svg.setAttribute('width', this.width);
+				this.svg.setAttribute('height', this.height);
+
+				this.name = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+				this.name.setAttribute('x', '50%');
+				this.name.setAttribute('y', '0');
+				this.name.setAttribute('text-anchor', 'middle');
+				this.name.setAttribute('dominant-baseline', 'text-before-edge');
+				this.name.setAttribute('font-family', 'TankTrouble');
+				this.name.setAttribute('font-weight', 'normal');
+				this.name.setAttribute('font-size', '16');
+				this.name.setAttribute('fill', 'white');
+				this.name.setAttribute('stroke', 'black');
+				this.name.setAttribute('stroke-line-join', 'round');
+				this.name.setAttribute('stroke-width', '2');
+				this.name.setAttribute('paint-order', 'stroke');
+				this.name.textContent = this.username;
+
+				this.svg.appendChild(this.name);
+
+				shadow.appendChild(this.svg);
+			}
+
+			/**
+			 * Scale the username SVG text when it's in the DOM.
+			 * 
+			 * Bounding boxes will first be calculated right when
+			 * it can be rendered.
+			 */
+			connectedCallback() {
+				const nameWidth = this.name.getComputedTextLength();
+				if (nameWidth > this.width) {
+					// Scale text down to match svg size
+					const newSize = Math.floor((this.width / nameWidth) * 100);
+					this.name.setAttribute('font-size', `${ newSize }%`);
+				}
+			}
+
+		});
+}
+
 (() => {
 	/**
 	 * Patch a sprite that doesn't have a .log bound to it
@@ -173,31 +247,12 @@ const timeAgo = date => {
 
 		// Render name of primary creator
 		Backend.getInstance().getPlayerDetails(result => {
-			const creatorName = $('<div/>');
 			const username = typeof result === 'object' ? Utils.maskUnapprovedUsername(result) : 'Scrapped';
+			const width = UIConstants.TANK_ICON_RESOLUTIONS[UIConstants.TANK_ICON_SIZES.SMALL] + 10;
+			const height = 25;
 
-			// FIXME: Too-long names clip the svg container
-			creatorName.svg({
-				settings: {
-					width: UIConstants.TANK_ICON_RESOLUTIONS[UIConstants.TANK_ICON_SIZES.SMALL] + 10,
-					height: 25
-				}
-			});
-			const nameSvg = creatorName.svg('get');
-			const nameText = nameSvg.text('50%', 0, username, {
-				textAnchor: 'middle',
-				dominantBaseline: 'text-before-edge',
-				fontFamily: 'TankTrouble',
-				fontWeight: 'normal',
-				fontSize: '80%',
-				fill: 'white',
-				stroke: 'black',
-				strokeLineJoin: 'round',
-				strokeWidth: 2,
-				paintOrder: 'stroke'
-			});
-			nameSvg.configure(nameText);
-			creatorsContainer.find('.tank.creator').append(creatorName);
+			const playerName = $(`<player-name username="${ username }" width="${ width }" height="${ height }"></player-name>`);
+			creatorsContainer.find('.tank.creator').append(playerName);
 		}, () => {}, () => {}, creators.creator, Caches.getPlayerDetailsCache());
 	};
 
