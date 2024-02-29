@@ -58,6 +58,22 @@ player-name {
 	display: block;
 }`);
 
+// Wide "premium" screen
+GM_addStyle(`
+#content {
+    max-width: 1884px !important;
+    width: calc(100%) !important;
+}
+
+.horizontalAdSlot,
+.verticalAdSlot,
+#leftBanner,
+#rightBanner,
+#topBanner {
+    display: none !important;
+}
+`);
+
 if (!customElements.get('player-name')) {
 	customElements.define('player-name',
 
