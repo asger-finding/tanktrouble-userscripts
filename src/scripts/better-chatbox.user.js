@@ -3,7 +3,7 @@
 // @author      commander
 // @description Redesigned chatbox meant both for power users, and those who maybe just wants something new
 // @namespace   https://github.com/asger-finding/tanktrouble-userscripts
-// @version     0.1.2
+// @version     0.1.3
 // @license     GPL-3.0
 // @match       *://*.tanktrouble.com/*
 // @exclude     *://classic.tanktrouble.com/
@@ -15,7 +15,6 @@
 // @noframes
 // ==/UserScript==
 
-// TODO: chat messages history - press up to go to last sent message
 // TODO: whisper suggestions when pressing @ ?
 
 GM_addStyle(`
@@ -52,6 +51,7 @@ GM_addStyle(`
 #chat textarea {
   left: 5px;
   transition: width 0s !important;
+  width: calc(100% - 12px);
 }
 #chat .body {
   padding-right: 10px;
@@ -65,7 +65,6 @@ GM_addStyle(`
 #chat .body .chatMessage svg {
   padding: 2px 4px 1px 4px;
   border-left: 2px dotted rgb(170, 170, 170);
-  filter: drop-shadow(1px 1px 1px #00000022);
 }
 #chat .body.dragging {
   border: none !important;
@@ -116,6 +115,13 @@ body:has(#chat .body.ui-resizable-resizing) .ui-resizable-handle.handle.ui-resiz
 }
 `);
 
+// Initialize dynamic stylesheet
+// for user-defined chat width
+const inputWidth = new CSSStyleSheet();
+inputWidth.insertRule('#chat form { padding-right: 12px !important; }', 0);
+inputWidth.insertRule('#chat form, #chat textarea { width: 208px !important; }', 1);
+document.adoptedStyleSheets = [inputWidth];
+
 /**
  * Reconfigure the chat handle to be dragging
  * from the south-east direction (down)
@@ -148,8 +154,8 @@ const changeHandleDirection = () => {
 };
 
 /**
- * Hook message render functions to disable jquery .show() animation
- * This fixes chat messages not showing up in the reversed chat order
+ * Hook message render functions to disable jquery .show() animation and scroll to bottom
+ * This fixes chat messages not showing up in the reversed chat order or overflowed messages being cleared
  */
 const fixChatRendering = () => {
 	Loader.interceptFunction(TankTrouble.ChatBox, '_renderChatMessage', (original, ...args) => {
@@ -215,35 +221,120 @@ const startChatSavestate = () => {
 	return GM_getValue('chat-open', true);
 };
 
+/**
+ * Add up/down history for sent messages
+ * @param input Input to target
+ */
+const addInputHistory = input => {
+	const messages = [];
+	let currentInputValue = input.value;
+
+	// Create and initialize chat messages history iterator
+	let i = messages.length;
+	const iterator = (function* chatsIterator() {
+		while (true) {
+			const incOrDec = (yield messages[i]) === 'prev' ? -1 : 1;
+			i = Math.min(Math.max(i + incOrDec, 0), messages.length);
+		}
+	}(messages));
+
+	// Initialize the generator
+	iterator.next();
+
+	/**
+	 * Check whether or not the input has an empty selection range
+	 * @returns Selection range is 0
+	 */
+	const isSelectionEmpty = () => input.selectionStart === input.selectionEnd;
+
+	/** Handle the user triggering a submit keydown event */
+	const handleSubmit = () => {
+		if (!input.value) return;
+
+		messages.push(input.value);
+		currentInputValue = '';
+
+		i = messages.length;
+	};
+
+	/** Handle the user triggering an arrow up keydown event */
+	const handleArrowUp = () => {
+		if (isSelectionEmpty() && input.selectionStart === 0) {
+			const { value } = iterator.next('prev');
+			input.value = typeof value === 'undefined' ? '' : value;
+
+			input.setSelectionRange(input.value.length, input.value.length);
+			input.dispatchEvent(new Event('input', {}));
+		}
+	};
+
+	/** Handle the user triggering an arrow down keydown event */
+	const handleArrowDown = () => {
+		if (isSelectionEmpty() && input.selectionStart === input.value.length) {
+			const { value } = iterator.next();
+			input.value = typeof value === 'undefined' ? currentInputValue : value;
+
+			input.setSelectionRange(input.value.length, input.value.length);
+			input.dispatchEvent(new Event('input', {}));
+		}
+	};
+
+	// If the user is at the top of the history,
+	// save the chat input value as the "current"
+	// message whenever there is a change
+	input.addEventListener('input', ({ inputType }) => {
+		const isAtEndOfHistory = i === messages.length;
+		const hasValueChanged = typeof inputType !== 'undefined';
+		if (isAtEndOfHistory && hasValueChanged) currentInputValue = input.value;
+	});
+
+	// Listen for keydown events
+	// and trigger handlers
+	input.addEventListener('keydown', ({ key }) => {
+		switch (key) {
+		case 'Enter':
+			handleSubmit();
+			break;
+		case 'ArrowUp':
+			handleArrowUp();
+			break;
+		case 'ArrowDown':
+			handleArrowDown();
+			break;
+		default:
+			break;
+		}
+	});
+};
+
 changeHandleDirection();
 fixChatRendering();
+
 Loader.whenContentInitialized().then(async() => {
 	preventChatClear();
 
 	const shouldChatOpen = await startChatSavestate();
 	if (shouldChatOpen) TankTrouble.ChatBox.open();
 
-	// Get the plain nodes for better performance
 	// eslint-disable-next-line prefer-destructuring
 	const chatBody = TankTrouble.ChatBox.chatBody[0];
 	// eslint-disable-next-line prefer-destructuring
-	const chatForm = TankTrouble.ChatBox.chatForm[0];
-	// eslint-disable-next-line prefer-destructuring
 	const chatInput = TankTrouble.ChatBox.chatInput[0];
+
+	addInputHistory(chatInput);
 
 	// Create a mutation observer that looks for changes in the chatBody's attributes (namely width)
 	new MutationObserver(() => {
 		const width = Number(chatBody.offsetWidth || 220);
 
-		chatForm.style.width = `${width}px`;
-		chatInput.style.width = `${width - 12}px`;
+		inputWidth.deleteRule(1);
+		inputWidth.insertRule(`#chat form, #chat form textarea { width: ${width - 12}px !important; }`, 1);
+
+		chatInput.dispatchEvent(new Event('input', {}));
 	}).observe(chatBody, {
 		attributes: true,
 		characterData: false
 	});
-
-	chatForm.style.width = '220px';
-	chatInput.style.width = `${chatForm.offsetWidth - 12}px`;
 
 	// Allow more characters in the chat input
 	chatInput.setAttribute('maxlength', '255');
