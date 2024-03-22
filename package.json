@@ -9,12 +9,17 @@
   "description": "TankTrouble Userscripts",
   "keywords": [],
   "scripts": {
-    "dev": "http-server ./src/ -c5"
+    "dev": "http-server ./src/ -c5",
+    "bump-version-reminder": "chmod +x ./scripts/userscripts-reminder.sh && ./scripts/userscripts-reminder.sh"
   },
   "devDependencies": {
+    "@fastify/pre-commit": "^2.1.0",
     "eslint": "^8.56.0",
     "eslint-config-raven": "^1.0.3",
     "eslint-plugin-jsdoc": "^46.9.1",
     "http-server": "^14.1.1"
-  }
+  },
+  "pre-commit": [
+    "bump-version-reminder"
+  ]
 }
