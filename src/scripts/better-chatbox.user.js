@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name        Better TankTrouble Chatbox
+// @name        Power Chat
 // @author      commander
-// @description Redesigned chatbox meant both for power users, and those who maybe just wants something new
+// @description Redesigned chatbox for power users — and for those that just want a refresh
 // @namespace   https://github.com/asger-finding/tanktrouble-userscripts
 // @version     0.1.3
 // @license     GPL-3.0
@@ -11,116 +11,173 @@
 // @grant       GM_addStyle
 // @grant       GM_getValue
 // @grant       GM_setValue
+// @require     https://cdn.jsdelivr.net/npm/match-sorter@6/dist/match-sorter.umd.min.js
 // @require     https://update.greasyfork.org/scripts/482092/1309109/TankTrouble%20Development%20Library.js
 // @noframes
 // ==/UserScript==
 
-// TODO: whisper suggestions when pressing @ ?
-
 GM_addStyle(`
 #chat {
-  /*Move it to the bottom left*/
-  inset: calc(100% - 30px) auto auto 34px !important;
-  /*Disable drop shadow filter*/
-  filter: none;
-  -webkit-filter: none;
+	/*Move it to the bottom left*/
+	inset: calc(100% - 30px) auto auto 34px !important;
+	/*Disable drop shadow filter*/
+	filter: none;
+	-webkit-filter: none;
 }
 /*Reverse the chat flow*/
 #chat,
 #chat .content,
 #chat .body {
-  display: flex;
-  flex-direction: column-reverse;
+	display: flex;
+	flex-direction: column-reverse;
 }
 #chat .status.button {
-  transform: translate(7px, -18px);
-  cursor: initial;
-  z-index: 1;
+	transform: translate(7px, -18px);
+	cursor: initial;
+	z-index: 1;
 }
 #chat form {
-  width: 200px;
-  margin-left: 20px;
-  background: #ececec;
+	width: 200px;
+	margin-left: 20px;
+	background: #ececec;
+	border-image: linear-gradient(90deg, rgb(0 0 0 / 20%), #0000) 4 7 3 / 0 0 1pt 0 / 1pt;
 }
 #chat form[style*="repeating-linear-gradient"] {
-  background: #d0d0d0 !important;
+	background: #d0d0d0 !important;
 }
 #chat:not(.open) form {
-  display: none;
+	display: none;
 }
 #chat textarea {
-  left: 5px;
-  transition: width 0s !important;
-  width: calc(100% - 12px);
+	left: 5px;
+	transition: width 0s !important;
+	width: calc(100% - 12px);
 }
 #chat .body {
-  padding-right: 10px;
-  border-radius: 3px;
-  background: linear-gradient(225deg, #00000005 12px, #00000014 12px, #00000014 100%);
-  margin-bottom: 7px;
-  top: 0 !important;
-  -webkit-mask-image: linear-gradient(225deg, #000000 11px, #00000000 12px, #00000000 100% ),
-	linear-gradient(to top, #000000 70%, rgba(0, 0, 0, 0.11));
+	padding-right: 10px;
+	border-radius: 3px;
+	background: linear-gradient(225deg, #00000005 12px, #00000014 12px, #00000014 100%);
+	margin-bottom: 7px;
+	top: 0 !important;
+	-webkit-mask-image: linear-gradient(225deg, #000000 11px, #00000000 12px, #00000000 100% ),
+	linear-gradient(to top, #000000 70%, rgb(0 0 0 / 11%));
+	border-image: linear-gradient(90deg, rgb(0 0 0 / 20%), #0000) 4 7 3 / 0 0 1pt 0 / 0;
 }
 #chat .body .chatMessage svg {
-  padding: 2px 4px 1px 4px;
-  border-left: 2px dotted rgb(170, 170, 170);
+	padding: 2px 4px 1px 4px;
+	border-left: 2px dotted rgb(170, 170, 170);
 }
+/*#chat .body .chatMessage:not(:first-of-type) svg {
+	border-image: linear-gradient(90deg, #00000038, #0000) 4 7 3 / 0 0 1px 0 / 1px;
+}*/
 #chat .body.dragging {
-  border: none !important;
-  margin-left: 20px !important;
+	border: none !important;
+	margin-left: 20px !important;
 }
 /*Rotate and align the handle to top-right*/
 .handle.ui-resizable-ne[src*="resizeHandleBottomRight.png"] {
-  width: 12px;
-  height: 12px !important;
-  transform: translateX(6px) rotate(-90deg);
-  z-index: 2147483647;
-  position: sticky;
-  left: calc(100% - 7px);
-  top: 0;
-  order: 0;
-  margin-bottom: auto !important;
+	width: 12px;
+	height: 12px !important;
+	transform: translateX(6px) rotate(-90deg);
+	z-index: 2147483647;
+	position: sticky;
+	left: calc(100% - 7px);
+	top: 0;
+	order: 0;
+	margin-bottom: auto !important;
 }
 body:has(#chat .body.ui-resizable-resizing) .ui-resizable-handle.handle.ui-resizable-ne {
-  display: none !important;
+	display: none !important;
 }
 
 /* Scrollbar */
 #chat .body {
-  scrollbar-gutter: stable;
-  scrollbar-width: thin;
-  scrollbar-color: rgb(170, 170, 170) transparent;
-  align-items: end;
-  direction: rtl;
-  pointer-events: auto;
-  overflow-x: hidden;
-  overflow-y: hidden;
+	scrollbar-gutter: stable;
+	scrollbar-width: thin;
+	scrollbar-color: rgb(170, 170, 170) transparent;
+	align-items: end;
+	direction: rtl;
+	pointer-events: auto;
+	overflow-x: hidden;
+	overflow-y: hidden;
 }
 #chat .body:hover {
-  overflow-y: scroll;
+	overflow-y: scroll;
 }
 #chat .body .chatMessage {
-  direction: ltr;
-  margin-left: ${(/Chrome.*Safari/u).test(navigator.userAgent) ? '3px' : '5px'};
+	direction: ltr;
+	margin-left: ${(/Chrome.*Safari/u).test(navigator.userAgent) ? '3px' : '5px'};
 }
 #chat .body::-webkit-scrollbar {
-  width: 3px;
+	width: 3px;
 }
 #chat .body::-webkit-scrollbar-track {
-  background: transparent;
+	background: transparent;
 }
 #chat .body::-webkit-scrollbar-thumb {
-  background: rgb(170, 170, 170);
+	background: rgb(170, 170, 170);
+}
+#chat form .autocomplete-dropdown {
+	scrollbar-gutter: stable;
+	scrollbar-width: thin;
+	scrollbar-color: #00a902 transparent;
+	white-space: nowrap;
+	z-index: 999;
+	position: absolute;
+	bottom: 0;
+	margin-bottom: 25px;
+	background-color: #00ff02;
+	border-radius: 3px;
+	font-family: Arial;
+	padding: 4px 2px;
+	filter: drop-shadow(0 0 3px #00000044);
+	min-width: 120px;
+	max-width: 200px;
+	max-height: 120px;
+	overflow-y: scroll;
+}
+#chat form .autocomplete-dropdown div {
+	display: none;
+	cursor: pointer;
+	overflow: hidden;
+    text-overflow: ellipsis;
+	border-bottom: 1pt dotted #00a902;
+	margin-bottom: 2px;
+	padding: 0 8px 2px 4px;
+}
+#chat form .autocomplete-dropdown .match {
+	display: block;
+}
+#chat form .autocomplete-dropdown .match:not(:has(~ .match)) {
+	border-bottom: none;
+	padding: 0 8px 0 4px;
+}
+#chat form .autocomplete-dropdown .highlight {
+	font-weight: bold;
+}
+#chat form .autocomplete-dropdown:hover .highlight {
+	font-weight: normal;
+}
+#chat form .autocomplete-dropdown div:hover {
+	font-weight: bold !important;
+}
+#chat form .autocomplete-dropdown:has(div:not(.highlight):hover) > .highlight {
+	font-weight: normal;
+}
+#chat form .autocomplete-caret-mirror {
+	font-family: Arial;
+	font-weight: bold;
+	font-size: inherit;
+	margin: 0 0 0 5px;
+	padding: 1px 2px;
+	background: transparent;
+	color: transparent;
+	opacity: 0;
+	pointer-events: none;
+	z-index: -2147483647;
+	height: 0;
 }
 `);
-
-// Initialize dynamic stylesheet
-// for user-defined chat width
-const inputWidth = new CSSStyleSheet();
-inputWidth.insertRule('#chat form { padding-right: 12px !important; }', 0);
-inputWidth.insertRule('#chat form, #chat textarea { width: 208px !important; }', 1);
-document.adoptedStyleSheets = [inputWidth];
 
 /**
  * Reconfigure the chat handle to be dragging
@@ -179,7 +236,7 @@ const fixChatRendering = () => {
  * Prevent TankTrouble from clearing the chat when the client disconnects
  * Print message to chat when client switches server to separate conversations
  */
-const preventChatClear = () => {
+const preventServerChangeChatClear = () => {
 	Loader.interceptFunction(TankTrouble.ChatBox, '_clearChat', (original, ...args) => {
 		const isUnconnected = ClientManager.getClient().getState() === TTClient.STATES.UNCONNECTED;
 
@@ -193,12 +250,13 @@ const preventChatClear = () => {
 	Loader.interceptFunction(TankTrouble.ChatBox, '_updateStatusMessageAndAvailability', (original, ...args) => {
 		const [systemMessageText, guestPlayerIds] = args;
 
-		// Check for welcome message
-		// If true, print a system message
+		// Check for a welcome message. If match.
+		// print a different system message
 		if (systemMessageText === 'Welcome to TankTrouble Comms § § ') {
 			const newServer = ClientManager.getAvailableServers()[ClientManager.multiplayerServerId];
 			return original(`Connected to ${ newServer.name } ${ guestPlayerIds.length ? '§ ' : '' }`, guestPlayerIds);
 		}
+
 		return original(...args);
 	});
 };
@@ -207,7 +265,15 @@ const preventChatClear = () => {
  * Write the chat savestate to storage and return
  * @returns Promise for last savestate
  */
-const startChatSavestate = () => {
+const initChatSavestate = async() => {
+	// Initialize dynamic stylesheet
+	// for user-defined chat width
+	const inputWidth = new CSSStyleSheet();
+	inputWidth.insertRule('#chat form { padding-right: 12px !important; }', 0);
+	inputWidth.insertRule('#chat form, #chat textarea { width: 208px !important; }', 1);
+	document.adoptedStyleSheets = [inputWidth];
+
+	// Savestate hooks
 	Loader.interceptFunction(TankTrouble.ChatBox, 'open', (original, ...args) => {
 		GM_setValue('chat-open', true);
 		original(...args);
@@ -216,18 +282,47 @@ const startChatSavestate = () => {
 		GM_setValue('chat-open', false);
 		original(...args);
 	});
+	Loader.interceptFunction(TankTrouble.ChatBox, '_refreshChat', (original, ...args) => {
+		original(...args);
+		GM_setValue('chat-width', TankTrouble.ChatBox.chatBody[0].clientWidth);
+	});
 
-	// Get savestate and default to chat being open
-	return GM_getValue('chat-open', true);
+	// Get savestate
+	const shouldOpen = await GM_getValue('chat-open', true);
+	const initialWidth = await GM_getValue('chat-width', 0);
+
+	Loader.whenContentInitialized().then(() => {
+		/* eslint-disable prefer-destructuring */
+		const chatBody = TankTrouble.ChatBox.chatBody[0];
+		const chatInput = TankTrouble.ChatBox.chatInput[0];
+		/* eslint-enable prefer-destructuring*/
+
+		if (shouldOpen) TankTrouble.ChatBox.open();
+		if (initialWidth !== 0) chatBody.style.width = `${initialWidth}px`;
+
+		// Create a mutation observer that looks for
+		// changes in the chatBody's attributes
+		new MutationObserver(() => {
+			const width = Number(chatBody.offsetWidth || 220);
+
+			inputWidth.deleteRule(1);
+			inputWidth.insertRule(`#chat form, #chat form textarea { width: ${width - 12}px !important; }`, 1);
+
+			chatInput.dispatchEvent(new InputEvent('input'));
+		}).observe(chatBody, {
+			attributes: true,
+			characterData: false
+		});
+	});
 };
 
 /**
  * Add up/down history for sent messages
- * @param input Input to target
+ * @param chatInput Input to target
  */
-const addInputHistory = input => {
+const addInputHistory = chatInput => {
 	const messages = [];
-	let currentInputValue = input.value;
+	let currentInputValue = chatInput.value;
 
 	// Create and initialize chat messages history iterator
 	let i = messages.length;
@@ -245,13 +340,13 @@ const addInputHistory = input => {
 	 * Check whether or not the input has an empty selection range
 	 * @returns Selection range is 0
 	 */
-	const isSelectionEmpty = () => input.selectionStart === input.selectionEnd;
+	const isSelectionEmpty = () => chatInput.selectionStart === chatInput.selectionEnd;
 
 	/** Handle the user triggering a submit keydown event */
 	const handleSubmit = () => {
-		if (!input.value) return;
+		if (!chatInput.value) return;
 
-		messages.push(input.value);
+		messages.push(chatInput.value);
 		currentInputValue = '';
 
 		i = messages.length;
@@ -259,38 +354,38 @@ const addInputHistory = input => {
 
 	/** Handle the user triggering an arrow up keydown event */
 	const handleArrowUp = () => {
-		if (isSelectionEmpty() && input.selectionStart === 0) {
+		if (isSelectionEmpty() && chatInput.selectionStart === 0) {
 			const { value } = iterator.next('prev');
-			input.value = typeof value === 'undefined' ? '' : value;
+			chatInput.value = typeof value === 'undefined' ? '' : value;
 
-			input.setSelectionRange(input.value.length, input.value.length);
-			input.dispatchEvent(new Event('input', {}));
+			chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length);
+			chatInput.dispatchEvent(new InputEvent('input', { isComposing: true }));
 		}
 	};
 
 	/** Handle the user triggering an arrow down keydown event */
 	const handleArrowDown = () => {
-		if (isSelectionEmpty() && input.selectionStart === input.value.length) {
+		if (isSelectionEmpty() && chatInput.selectionStart === chatInput.value.length) {
 			const { value } = iterator.next();
-			input.value = typeof value === 'undefined' ? currentInputValue : value;
+			chatInput.value = typeof value === 'undefined' ? currentInputValue : value;
 
-			input.setSelectionRange(input.value.length, input.value.length);
-			input.dispatchEvent(new Event('input', {}));
+			chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length);
+			chatInput.dispatchEvent(new InputEvent('input', { isComposing: true }));
 		}
 	};
 
 	// If the user is at the top of the history,
 	// save the chat input value as the "current"
 	// message whenever there is a change
-	input.addEventListener('input', ({ inputType }) => {
+	chatInput.addEventListener('input', ({ inputType }) => {
 		const isAtEndOfHistory = i === messages.length;
 		const hasValueChanged = typeof inputType !== 'undefined';
-		if (isAtEndOfHistory && hasValueChanged) currentInputValue = input.value;
+		if (isAtEndOfHistory && hasValueChanged) currentInputValue = chatInput.value;
 	});
 
 	// Listen for keydown events
 	// and trigger handlers
-	input.addEventListener('keydown', ({ key }) => {
+	chatInput.addEventListener('keydown', ({ key }) => {
 		switch (key) {
 		case 'Enter':
 			handleSubmit();
@@ -307,34 +402,476 @@ const addInputHistory = input => {
 	});
 };
 
+/**
+ * Add auto-complete for user mentions when typing @ in the chat input
+ * @param chatInput Chat input instance
+ */
+const addMentionAutocomplete = chatInput => {
+	class Dropdown {
+
+		options = new Map();
+
+		matches = [];
+
+		/**
+		 * Setup the dropdown class
+		 * @param input Input to attach to
+		 * @param config Dropdown configuration (allow multiple of the same value, expiry time)
+		 */
+		constructor(input, config) {
+			this.input = $(input);
+			this.wrapper = $('<div class="autocomplete-dropdown" tabindex="-1"></div>').insertAfter(this.input);
+			this.textareaMirror = $('<div class="autocomplete-caret-mirror"></div>').appendTo(this.wrapper.parent());
+			this.textareaMirrorInline = $('<span></span>').appendTo(this.textareaMirror);
+
+			Object.assign(this, {
+				allowRepeats: false,
+				autofillLifetime: 10 * 60 * 100,
+				inputHeight: 18,
+				...config
+			});
+
+			this.wrapper.insertAfter(this.input);
+
+
+			this.hide();
+		}
+
+		#searchTerm = -1;
+
+		/**
+		 * Filter the dropdown elements when searchterm is set
+		 * @param term String term to search the dropdown registry for
+		 * @returns term
+		 */
+		set searchTerm(term) {
+			if (this.#searchTerm !== term) {
+				this.#removeExpired();
+
+				const allSymbols = Array.from(this.options.keys());
+				this.matches = matchSorter.matchSorter(allSymbols, term, { keys: [symbol => symbol.description] });
+				for (const symbol of allSymbols) {
+					const element = this.options.get(symbol).value;
+
+					element.classList[this.matches.includes(symbol) ? 'add' : 'remove']('match');
+				}
+				for (const symbol of this.matches) this.wrapper.append(this.options.get(symbol).value);
+
+				this.#resetToFirst();
+			}
+
+			this.#searchTerm = term;
+			return term;
+		}
+
+		/**
+		 * Getter for `searchTerm`
+		 * @returns `searchTerm`
+		 */
+		get searchTerm() {
+			return this.#searchTerm;
+		}
+
+		iterator = (function* (options, that) {
+			let i = 0;
+			while (true) {
+				const symbol = that.matches[i];
+
+				const change = (yield [symbol, options.get(symbol)]) || 0;
+
+				i = (i = (i + change) % Math.max(that.matches.length, 1)) < 0
+					? i + that.matches.length
+					: i;
+			}
+		}(this.options, this));
+
+		/** Render the dropdown if not already visible */
+		show() {
+			if (this.isShowing()) return;
+
+			this.#resetToFirst();
+
+			this.wrapper.show();
+			this.wrapper.scrollTop(0);
+		}
+
+		/** Hide the dropdown */
+		hide() {
+			this.wrapper.hide();
+		}
+
+		/**
+		 * Check if the dropdown is visible
+		 * @returns Is the dropdown showing?
+		 */
+		isShowing() {
+			return this.wrapper.is(':visible');
+		}
+
+		/**
+		 * Compute dropdown x-shift to textarea value.
+		 * 
+		 * Should be called when value changes in the input field
+		 */
+		update() {
+			const transformed = this.input.val()
+				.substr(0, this.input[0].selectionStart);
+			this.textareaMirrorInline.html(transformed);
+
+			const rects = this.textareaMirrorInline[0].getBoundingClientRect();
+			const left = rects.right - rects.x;
+			this.left = left
+				+ Dropdown.#toNumeric(this.input.css('left'))
+				+ Dropdown.#toNumeric(this.input.css('margin-left'))
+				+ Dropdown.#toNumeric(this.input.css('padding-left'));
+
+			const isWordWrapped = this.#isWordWrapped();
+			const leftShift = isWordWrapped ? 0 : Math.max(0, this.left - (this.wrapper.width() / 2));
+			const bottomShift = this.input.outerHeight() - this.inputHeight;
+			this.wrapper.css('margin-left', `${leftShift}px`);
+			this.wrapper.css('margin-bottom', `${bottomShift + 25}px`);
+
+			if (!this.isShowing()) this.show();
+		}
+
+		/**
+		 * Get data for the current position
+		 * @returns Identifier and data for the current dropdown position
+		 */
+		getCurrent() {
+			return this.iterator.next(0).value;
+		}
+
+		/**
+		 * Add an autocomplete option to the dropdown
+		 * @param option Option as string
+		 * @param submitCallback Event handler for mouseup
+		 * @returns Success in adding option?
+		 */
+		addOption(option, submitCallback) {
+			const overrideSymbol = !this.allowRepeats
+				&& Array.from(this.options.keys())
+					.find(({ description }) => description === option);
+			const symbolExists = typeof overrideSymbol === 'symbol';
+
+			if (symbolExists) return false;
+
+			const symbol = Symbol(option);
+
+			const element = document.createElement('div');
+			element.innerText = option;
+			element.addEventListener('mouseup', evt => submitCallback(evt, evt.target.innerText));
+
+			const insert = [
+				symbol,
+				{
+					inserted: Date.now(),
+					lifetime: this.autofillLifetime,
+					value: element
+				}
+			];
+
+			this.options.set(...insert);
+
+			return true;
+		}
+
+		/**
+		 * Add an array of text options to the dropdown
+		 * @param options Options as string[]
+		 * @param submitCallback Generalized event handler for mouseup for all options
+		 */
+		addOptions(options, submitCallback) {
+			for (const option of options) this.addOption(option, submitCallback);
+		}
+
+		/**
+		 * Remove option and corresponding HTMLElement from DOM
+		 * @param symbol Symbol for element to remove
+		 * @returns Was the option deleted?
+		 */
+		removeOption(symbol) {
+			this.options.get(symbol)?.value.remove();
+			this.matches = this.matches.filter(toRemove => toRemove !== symbol);
+			return this.options.delete(symbol);
+		}
+
+		/**
+		 * Clear all options from the dropdown
+		 * @returns Did options clear?
+		 */
+		clearOptions() {
+			for (const symbol of this.options.keys()) this.removeOption(symbol);
+
+			return this.options.size === 0
+				&& this.wrapper.children().length === 0;
+		}
+
+		/**
+		 * Navigate position in the dropdown up/down
+		 * @param direction Up/down shift as number
+		 * @returns Identifier for where we navigated to
+		 */
+		navigate(direction) {
+			this.wrapper.children().removeClass('highlight');
+
+			const [symbol, data] = this.iterator.next(direction).value;
+			if (!symbol) return null;
+
+			data.value.classList.add('highlight');
+			data.value.scrollIntoView(false);
+
+			return symbol;
+		}
+
+		/**
+		 * Check if the input wraps to newline
+		 * @returns Whether the input is one or multiple lines
+		 */
+		#isWordWrapped() {
+			return this.input.outerHeight() <= this.inputHeight;
+		}
+
+		/**
+		 * Reset the position to the
+		 * first item in the dropdown
+		 */
+		#resetToFirst() {
+			const symbols = this.matches;
+			const [currentSymbol] = this.iterator.next(0).value;
+			const dist = symbols.indexOf(currentSymbol);
+
+			this.navigate(-dist);
+		}
+
+		/**
+		 * Remove expired entries
+		 */
+		#removeExpired() {
+			for (const [symbol, value] of this.options.entries()) {
+				const expiry = value.inserted + value.autofillLifetime;
+				if (Date.now() > expiry) this.removeOption(symbol);
+			}
+		}
+
+		/**
+		 * Remove all non-numbers from string and return string as number
+		 * @param str String to parse
+		 * @returns String in number format
+		 */
+		static #toNumeric = str => Number(str.replace(/[^0-9.]/ug, ''));
+
+	}
+
+	const dropdown = new Dropdown(chatInput);
+
+	/**
+	 * Get the word and start/end indexies of the input selectionEnd
+	 * @returns Object with word and range start/end 
+	 */
+	const getIndexiesOfWordInCurrentSelection = () => {
+		// Separate string by whitespace and
+		// list indexies for each word in array
+		const tokenizedQuery = chatInput.value.split(/[\s\n]/u).reduce((acc, word, index) => {
+			const previous = acc[index - 1];
+			const start = index === 0 ? index : previous.range[1] + 1;
+			const end = start + word.length;
+
+			return acc.concat([ { word, range: [start, end] } ]);
+		}, []);
+
+		const currentWord = tokenizedQuery.find(({ range }) => range[0] < chatInput.selectionEnd && range[1] >= chatInput.selectionEnd);
+
+		return currentWord;
+	};
+
+	/**
+	 * Returns the user that the selection is over, from the input value, if prefixed by a @
+	 * @returns Mention username or null
+	 */
+	const getUserFocusIfMention = () => {
+		const currentWord = getIndexiesOfWordInCurrentSelection();
+		const [mentions] = chatInput.value.split(/\s+(?=[^@])/u);
+		const isUserChat = mentions.startsWith('@');
+
+		if (currentWord && isUserChat) {
+			const [, end] = currentWord.range;
+			return end <= mentions.length ? currentWord : null;
+		}
+
+		return null;
+	};
+
+	/**
+	 * Handle a dropdown submit event (enter, tab or click)
+	 * by autofilling the value to the input field
+	 * @param evt Event object
+	 * @param username Username to autofill
+	 */
+	const handleSubmit = (evt, username = dropdown.getCurrent()[0].description) => {
+		const mention = getUserFocusIfMention();
+		if (mention === null) return;
+
+		const [start, end] = mention.range;
+		if (username) {
+			const before = chatInput.value.slice(0, start);
+			const after = chatInput.value.substring(end, chatInput.value.length);
+
+			const insertSpaceAfter = !after.startsWith(' ');
+
+			const beforeValue = `${ before }@${ username }${ insertSpaceAfter ? ' ' : '' }`;
+			const cursorPosition = [beforeValue.length + 1, beforeValue.length + 1];
+			chatInput.value = `${ beforeValue }${ after }`;
+
+			chatInput.setSelectionRange(...cursorPosition);
+		}
+
+		evt.preventDefault();
+
+		chatInput.dispatchEvent(new InputEvent('input'));
+	};
+
+	/**
+	 * Event handler for TTClient.EVENTS.GAME_LIST_CHANGED
+	 */
+	const handleGameListChanged = () => {
+		const gameStates = ClientManager.getClient().getAvailableGameStates();
+
+		for (const gameState of gameStates) {
+			const playerStates = gameState.getPlayerStates();
+
+			for (const player of playerStates) {
+				const playerId = player.getPlayerId();
+
+				Backend.getInstance().getPlayerDetails(result => {
+					if (typeof result === 'object') dropdown.addOption(result.getUsername(), handleSubmit);
+				}, () => {}, () => {}, playerId, Caches.getPlayerDetailsCache());
+			}
+		}
+	};
+
+	/**
+	 * Event handler for received chat messages
+	 * @param data Event data
+	 */
+	const handleNewChatMessage = data => {
+		const involvedPlayerIds = data.involvedPlayerIds || [...data.getFrom() || [], ...data.getTo() || []];
+		const loggedIn = Users.getAllPlayerIds();
+		const foreignPlayerIds = involvedPlayerIds.filter(playerId => !loggedIn.includes(playerId));
+
+		for (const playerId of foreignPlayerIds) {
+			Backend.getInstance().getPlayerDetails(result => {
+				if (typeof result === 'object') dropdown.addOption(result.getUsername(), handleSubmit);
+			}, () => {}, () => {}, playerId, Caches.getPlayerDetailsCache());
+		}
+	};
+
+	chatInput.addEventListener('input', ({ isComposing }) => {
+		if (isComposing) return;
+
+		const userFocus = getUserFocusIfMention();
+		if (userFocus === null) {
+			dropdown.hide();
+			return;
+		}
+
+		dropdown.searchTerm = userFocus.word.replace(/^@/u, '');
+		if (!dropdown.matches.length) {
+			dropdown.hide();
+			return;
+		}
+
+		// Show UI
+		dropdown.show();
+		dropdown.update();
+	});
+
+	// eslint-disable-next-line complexity
+	chatInput.addEventListener('keydown', evt => {
+		const userFocus = getUserFocusIfMention();
+		if (userFocus === null) return;
+
+		dropdown.searchTerm = userFocus.word.replace(/^@/u, '');
+		if (!dropdown.matches.length) return;
+
+		switch (evt.key) {
+		case 'Enter':
+		case 'Tab':
+			handleSubmit(evt);
+			break;
+		case 'ArrowUp':
+			dropdown.navigate(-1);
+			evt.preventDefault();
+			break;
+		case 'ArrowDown':
+			dropdown.navigate(1);
+			evt.preventDefault();
+			break;
+		default:
+			break;
+		}
+	}, false);
+
+	/**
+	 * State change event handler
+	 * @param _self Self reference
+	 * @param _oldState Old client state
+	 * @param newState New client state
+	 */
+	const clientStateEventHandler = (_self, _oldState, newState) => {
+		switch (newState) {
+		case TTClient.STATES.UNCONNECTED:
+			dropdown.clearOptions();
+			break;
+		default:
+			break;
+		}
+	};
+
+	/**
+	 * Event handler for new chat messages
+	 * @param _self Self reference
+	 * @param evt Event type
+	 * @param data Event data
+	 */
+	// eslint-disable-next-line complexity
+	const clientEventHandler = (_self, evt, data) => {
+		switch (evt) {
+		case TTClient.EVENTS.GAME_LIST_CHANGED:
+			handleGameListChanged();
+			break;
+		case TTClient.EVENTS.USER_CHAT_POSTED:
+			if (data) handleNewChatMessage(data);
+			break;
+		case TTClient.EVENTS.GLOBAL_CHAT_POSTED:
+		case TTClient.EVENTS.CHAT_POSTED:
+			if (data) handleNewChatMessage(data);
+			break;
+		case TTClient.EVENTS.SYSTEM_CHAT_POSTED:
+		case TTClient.EVENTS.PLAYERS_BANNED:
+		case TTClient.EVENTS.PLAYERS_UNBANNED:
+			if (data) handleNewChatMessage(data);
+			break;
+		default:
+			break;
+		}
+	};
+
+	ClientManager.getClient().addStateChangeListener(clientStateEventHandler, this);
+	ClientManager.getClient().addEventListener(clientEventHandler, this);
+};
+
 changeHandleDirection();
 fixChatRendering();
+initChatSavestate();
 
-Loader.whenContentInitialized().then(async() => {
-	preventChatClear();
-
-	const shouldChatOpen = await startChatSavestate();
-	if (shouldChatOpen) TankTrouble.ChatBox.open();
-
-	// eslint-disable-next-line prefer-destructuring
-	const chatBody = TankTrouble.ChatBox.chatBody[0];
+Loader.whenContentInitialized().then(() => {
 	// eslint-disable-next-line prefer-destructuring
 	const chatInput = TankTrouble.ChatBox.chatInput[0];
 
+	preventServerChangeChatClear();
+	addMentionAutocomplete(chatInput);
 	addInputHistory(chatInput);
-
-	// Create a mutation observer that looks for changes in the chatBody's attributes (namely width)
-	new MutationObserver(() => {
-		const width = Number(chatBody.offsetWidth || 220);
-
-		inputWidth.deleteRule(1);
-		inputWidth.insertRule(`#chat form, #chat form textarea { width: ${width - 12}px !important; }`, 1);
-
-		chatInput.dispatchEvent(new Event('input', {}));
-	}).observe(chatBody, {
-		attributes: true,
-		characterData: false
-	});
 
 	// Allow more characters in the chat input
 	chatInput.setAttribute('maxlength', '255');
