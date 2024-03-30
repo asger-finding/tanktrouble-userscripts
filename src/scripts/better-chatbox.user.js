@@ -3,7 +3,7 @@
 // @author      commander
 // @description Redesigned chatbox for power users — and for those that just want a refresh
 // @namespace   https://github.com/asger-finding/tanktrouble-userscripts
-// @version     0.1.3
+// @version     0.1.4
 // @license     GPL-3.0
 // @match       *://*.tanktrouble.com/*
 // @exclude     *://classic.tanktrouble.com/
@@ -18,164 +18,185 @@
 
 GM_addStyle(`
 #chat {
-	/*Move it to the bottom left*/
-	inset: calc(100% - 30px) auto auto 34px !important;
-	/*Disable drop shadow filter*/
+	/* Disable drop shadow filter */
 	filter: none;
-	-webkit-filter: none;
+
+	/* Transform chat location to bottom left */
+	inset: calc(100% - 30px) auto auto 34px !important;
 }
-/*Reverse the chat flow*/
+
+/* Reverse chat messages flow */
 #chat,
 #chat .content,
 #chat .body {
-	display: flex;
-	flex-direction: column-reverse;
+    display: flex;
+    flex-direction: column-reverse;
 }
+
+#chat .body {
+	align-items: end;
+	background: #00000014;
+	border-image: linear-gradient(90deg, rgb(0 0 0 / 20%), #0000) 4 7 3 / 0 0 1pt 0 / 0;
+	border-radius: 3px;
+	direction: rtl;
+	margin-bottom: 4px;
+	margin-top: 0 !important;
+	mask-image: linear-gradient(to top, rgb(0 0 0) 70%, rgb(0 0 0 / 11%));
+	overflow: hidden;
+	padding-right: 10px;
+	pointer-events: visible;
+
+	/* Scrollbar */
+	scrollbar-gutter: stable;
+	top: 0 !important;
+}
+
+#chat .content {
+	position: relative;
+	width: fit-content !important;
+}
+
 #chat .status.button {
-	transform: translate(7px, -18px);
 	cursor: initial;
+	transform: translate(7px, -18px);
 	z-index: 1;
 }
+
 #chat form {
-	width: 200px;
-	margin-left: 20px;
 	background: #ececec;
 	border-image: linear-gradient(90deg, rgb(0 0 0 / 20%), #0000) 4 7 3 / 0 0 1pt 0 / 1pt;
+	margin-left: 20px;
+	width: 200px;
 }
+
+/* Disable chat message sending animation */
 #chat form[style*="repeating-linear-gradient"] {
 	background: #d0d0d0 !important;
 }
+
 #chat:not(.open) form {
 	display: none;
 }
+
 #chat textarea {
+	font-family: Arial, verdana;
 	left: 5px;
 	transition: width 0s !important;
 	width: calc(100% - 12px);
 }
-#chat .body {
-	padding-right: 10px;
-	border-radius: 3px;
-	background: linear-gradient(225deg, #00000005 12px, #00000014 12px, #00000014 100%);
-	margin-bottom: 7px;
-	top: 0 !important;
-	-webkit-mask-image: linear-gradient(225deg, #000000 11px, #00000000 12px, #00000000 100% ),
-	linear-gradient(to top, #000000 70%, rgb(0 0 0 / 11%));
-	border-image: linear-gradient(90deg, rgb(0 0 0 / 20%), #0000) 4 7 3 / 0 0 1pt 0 / 0;
-}
+
 #chat .body .chatMessage svg {
-	padding: 2px 4px 1px 4px;
-	border-left: 2px dotted rgb(170, 170, 170);
+	border-left: 2px dotted rgb(170 170 170);
+	padding: 2px 4px 1px;
 }
-/*#chat .body .chatMessage:not(:first-of-type) svg {
-	border-image: linear-gradient(90deg, #00000038, #0000) 4 7 3 / 0 0 1px 0 / 1px;
-}*/
+
 #chat .body.dragging {
 	border: none !important;
 	margin-left: 20px !important;
 }
-/*Rotate and align the handle to top-right*/
+
+/* Rotate and align the handle to top-right */
 .handle.ui-resizable-ne[src*="resizeHandleBottomRight.png"] {
-	width: 12px;
 	height: 12px !important;
-	transform: translateX(6px) rotate(-90deg);
-	z-index: 2147483647;
-	position: sticky;
-	left: calc(100% - 7px);
+	position: absolute;
+	right: 0;
 	top: 0;
-	order: 0;
-	margin-bottom: auto !important;
+	transform: rotate(-90deg);
+	width: 12px;
 }
+
 body:has(#chat .body.ui-resizable-resizing) .ui-resizable-handle.handle.ui-resizable-ne {
 	display: none !important;
 }
 
-/* Scrollbar */
-#chat .body {
-	scrollbar-gutter: stable;
-	scrollbar-width: thin;
-	scrollbar-color: rgb(170, 170, 170) transparent;
-	align-items: end;
-	direction: rtl;
-	pointer-events: auto;
-	overflow-x: hidden;
-	overflow-y: hidden;
-}
 #chat .body:hover {
 	overflow-y: scroll;
 }
+
 #chat .body .chatMessage {
-	direction: ltr;
 	margin-left: ${(/Chrome.*Safari/u).test(navigator.userAgent) ? '3px' : '5px'};
+	direction: ltr;
 }
+
 #chat .body::-webkit-scrollbar {
 	width: 3px;
 }
+
 #chat .body::-webkit-scrollbar-track {
 	background: transparent;
 }
+
 #chat .body::-webkit-scrollbar-thumb {
-	background: rgb(170, 170, 170);
+	background: rgb(170 170 170);
 }
+
 #chat form .autocomplete-dropdown {
-	scrollbar-gutter: stable;
-	scrollbar-width: thin;
-	scrollbar-color: #00a902 transparent;
-	white-space: nowrap;
-	z-index: 999;
-	position: absolute;
-	bottom: 0;
-	margin-bottom: 25px;
 	background-color: #00ff02;
 	border-radius: 3px;
-	font-family: Arial;
-	padding: 4px 2px;
-	filter: drop-shadow(0 0 3px #00000044);
-	min-width: 120px;
-	max-width: 200px;
+	bottom: 0;
+	filter: drop-shadow(0 0 3px rgb(0 0 0 / 70%));
+	font-family: Arial, verdana;
+	margin-bottom: 25px;
 	max-height: 120px;
+	max-width: 200px;
+	min-width: 120px;
 	overflow-y: scroll;
+	padding: 4px 2px;
+	position: absolute;
+	scrollbar-color: #00a902 transparent;
+	scrollbar-gutter: stable;
+	scrollbar-width: thin;
+	white-space: nowrap;
+	z-index: 999;
 }
+
 #chat form .autocomplete-dropdown div {
-	display: none;
-	cursor: pointer;
-	overflow: hidden;
-    text-overflow: ellipsis;
 	border-bottom: 1pt dotted #00a902;
+	cursor: pointer;
+	display: none;
 	margin-bottom: 2px;
+	overflow: hidden;
 	padding: 0 8px 2px 4px;
+	text-overflow: ellipsis;
 }
+
 #chat form .autocomplete-dropdown .match {
 	display: block;
 }
+
 #chat form .autocomplete-dropdown .match:not(:has(~ .match)) {
 	border-bottom: none;
 	padding: 0 8px 0 4px;
 }
+
 #chat form .autocomplete-dropdown .highlight {
 	font-weight: bold;
 }
+
 #chat form .autocomplete-dropdown:hover .highlight {
 	font-weight: normal;
 }
+
 #chat form .autocomplete-dropdown div:hover {
 	font-weight: bold !important;
 }
+
 #chat form .autocomplete-dropdown:has(div:not(.highlight):hover) > .highlight {
 	font-weight: normal;
 }
+
 #chat form .autocomplete-caret-mirror {
-	font-family: Arial;
-	font-weight: bold;
-	font-size: inherit;
-	margin: 0 0 0 5px;
-	padding: 1px 2px;
 	background: transparent;
 	color: transparent;
+	font-family: Arial, verdana;
+	font-size: inherit;
+	font-weight: bold;
+	height: 0;
+	margin: 0 0 0 5px;
 	opacity: 0;
+	padding: 1px 2px;
 	pointer-events: none;
 	z-index: -2147483647;
-	height: 0;
 }
 `);
 
@@ -184,7 +205,7 @@ body:has(#chat .body.ui-resizable-resizing) .ui-resizable-handle.handle.ui-resiz
  * from the south-east direction (down)
  * to the north-east direction (up)
  */
-const changeHandleDirection = () => {
+const changeHandleDirection = async() => {
 	const { resizable } = $.fn;
 
 	// Use a regular function to keep context
@@ -208,6 +229,10 @@ const changeHandleDirection = () => {
 
 		return resizable.call(this, config);
 	};
+
+	await Loader.whenContentInitialized();
+
+	TankTrouble.ChatBox.chatBodyResizeHandle.detach().insertAfter(TankTrouble.ChatBox.chatBody);
 };
 
 /**
