@@ -29,8 +29,8 @@ GM_addStyle(`
 #chat,
 #chat .content,
 #chat .body {
-    display: flex;
-    flex-direction: column-reverse;
+	display: flex;
+	flex-direction: column-reverse;
 }
 
 #chat .body {
