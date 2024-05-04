@@ -5,7 +5,9 @@
 // @version     1.0.0-beta.1
 // @license     GPL-3.0
 // @description Shared library for TankTrouble userscript development
-// @match       *://*.tanktrouble.com/*
+// @match       https://tanktrouble.com/*
+// @match       https://beta.tanktrouble.com/*
+// @exclude     *://classic.tanktrouble.com/
 // @grant       none
 // @run-at      document-start
 // @noframes

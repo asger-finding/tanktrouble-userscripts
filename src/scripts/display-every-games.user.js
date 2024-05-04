@@ -4,7 +4,8 @@
 // @version     0.0.2
 // @license     GPL-3.0
 // @namespace   https://github.com/asger-finding/tanktrouble-userscripts
-// @match       https://*.tanktrouble.com/*
+// @match       https://tanktrouble.com/*
+// @match       https://beta.tanktrouble.com/*
 // @exclude     *://classic.tanktrouble.com/
 // @description Show all 6 potential games while in the lobby
 // @run-at      document-end

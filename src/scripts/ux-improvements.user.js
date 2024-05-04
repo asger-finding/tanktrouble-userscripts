@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name        UX Improvements
 // @author      commander
-// @description Add many UI improvements and additions
+// @description Many refactors and additions to the TankTrouble interface
 // @namespace   https://github.com/asger-finding/tanktrouble-userscripts
-// @version     0.0.3
+// @version     0.0.4
 // @license     GPL-3.0
-// @match       *://*.tanktrouble.com/*
+// @match       https://tanktrouble.com/*
+// @match       https://beta.tanktrouble.com/*
 // @exclude     *://classic.tanktrouble.com/
 // @run-at      document-end
 // @grant       GM_addStyle
@@ -13,11 +14,9 @@
 // @noframes
 // ==/UserScript==
 
-// TODO: Search in the forum (searxng api?)
-// TODO: Button to render high-res tanks no outline in TankInfoBox
 // TODO: Minimum game quality setting
-// TODO: Lobby games carousel
-// TODO: control switcher
+// TODO: Lobby games carousel instead
+// TODO: Controls switcher
 
 const ranges = {
 	years: 3600 * 24 * 365,

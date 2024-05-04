@@ -5,7 +5,8 @@
 // @namespace   https://github.com/asger-finding/tanktrouble-userscripts
 // @version     0.1.4
 // @license     GPL-3.0
-// @match       *://*.tanktrouble.com/*
+// @match       https://tanktrouble.com/*
+// @match       https://beta.tanktrouble.com/*
 // @exclude     *://classic.tanktrouble.com/
 // @run-at      document-end
 // @grant       GM_addStyle
